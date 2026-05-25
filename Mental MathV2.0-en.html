@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mental Math Trainer</title>
+  <style>
+    :root {
+      --bg: #edf7fb;
+      --surface: #ffffff;
+      --surface-soft: #e7f3fb;
+      --surface-warm: #ecfbf6;
+      --ink: #152033;
+      --muted: #5d728b;
+      --line: #c9d9e8;
+      --blue: #2563eb;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --red: #e11d48;
+      --amber: #f59e0b;
+      --shadow: 0 18px 44px rgba(21, 32, 51, .10);
+      --hairline: color-mix(in srgb, var(--line) 70%, transparent);
+      --panel-fill: color-mix(in srgb, var(--surface) 88%, transparent);
+      --accent-gradient: linear-gradient(135deg, var(--blue), var(--cyan));
+    }
+
+    body[data-theme="dark"] {
+      --bg: #07131f;
+      --surface: #0f1b2d;
+      --surface-soft: #14233a;
+      --surface-warm: #17283d;
+      --ink: #e5edf7;
+      --muted: #9aaac0;
+      --line: #2a3a55;
+      --blue: #60a5fa;
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --red: #fb7185;
+      --amber: #f59e0b;
+      --shadow: 0 24px 60px rgba(0,0,0,.26);
+      --hairline: color-mix(in srgb, var(--line) 72%, transparent);
+      --panel-fill: color-mix(in srgb, var(--surface) 88%, transparent);
+      --accent-gradient: linear-gradient(135deg, #2563eb, #22d3ee);
+    }
+
+    * { box-sizing: border-box; }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, var(--muted) 22%, transparent) transparent;
+    }
+
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--muted) 22%, transparent);
+      border-radius: 999px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(34,211,238,.20), transparent 30%),
+        radial-gradient(circle at 88% 6%, rgba(96,165,250,.18), transparent 32%),
+        linear-gradient(135deg, rgba(37,99,235,.09), transparent 34%),
+        linear-gradient(315deg, rgba(16,185,129,.10), transparent 32%),
+        var(--bg);
+      color: var(--ink);
+      padding: 18px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .34;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 72%);
+    }
+
+    button, input { font: inherit; }
+    button { border: 0; cursor: pointer; }
+
+    .app {
+      position: relative;
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1.22fr) minmax(300px, .72fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .brand, .panel {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 42%),
+        var(--panel-fill);
+      border: 1px solid var(--hairline);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      position: relative;
+      min-height: 124px;
+      padding: 26px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--cyan) 24%, transparent), transparent 56%),
+        linear-gradient(315deg, color-mix(in srgb, var(--blue) 18%, transparent), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.07), transparent 44%),
+        var(--panel-fill);
+    }
+
+    .brand > div:first-child {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      display: grid;
+      gap: 6px;
+      font-size: clamp(27px, 3.2vw, 42px);
+      line-height: 1;
+      letter-spacing: 0;
+      text-wrap: pretty;
+    }
+
+    .brand h1 span:first-child {
+      width: fit-content;
+      color: color-mix(in srgb, var(--cyan) 78%, var(--ink));
+      font-size: .66em;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .brand h1 span:last-child {
+      color: var(--ink);
+    }
+
+    .status-pill {
+      flex: 0 0 auto;
+      min-width: 112px;
+      min-height: 46px;
+      padding: 7px 12px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--surface-soft) 86%, transparent);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .status-pill span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      margin-bottom: 2px;
+    }
+
+    .status-pill b {
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    .stats {
+      min-width: 0;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--blue) 12%, transparent), transparent 66%),
+        var(--panel-fill);
+    }
+
+    .stat {
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), transparent),
+        color-mix(in srgb, var(--surface-soft) 64%, transparent);
+      min-width: 0;
+      min-height: 74px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 9px;
+      white-space: nowrap;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .app.sidebar-collapsed .layout {
+      grid-template-columns: 42px 1fr;
+    }
+
+    .side-panel {
+      position: sticky;
+      top: 12px;
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, var(--muted) 28%, transparent) transparent;
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--cyan) 9%, transparent), transparent 28%),
+        var(--panel-fill);
+    }
+
+    .side-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .side-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .side-panel::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--muted) 28%, transparent);
+      border-radius: 999px;
+    }
+
+    .sidebar-fab, .icon-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      box-shadow: none;
+      font-weight: 900;
+    }
+
+    .icon-btn {
+      width: auto;
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .toolbar-actions {
+      position: absolute;
+      right: 20px;
+      top: 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-left: auto;
+    }
+
+    .toolbar-actions .ghost-btn {
+      height: auto;
+      padding: 0;
+      font-size: 16px;
+      border-radius: 0;
+      border: 0;
+      color: var(--ink);
+      background: transparent;
+      box-shadow: none;
+      font-weight: 900;
+    }
+
+    .toolbar-actions .ghost-btn:hover,
+    .icon-btn:hover {
+      color: var(--cyan);
+    }
+
+    .side-top {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-fab {
+      position: static;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .sidebar-fab::before {
+      content: "";
+      width: 16px;
+      height: 12px;
+      background:
+        linear-gradient(var(--ink), var(--ink)) 0 0 / 16px 2px no-repeat,
+        linear-gradient(var(--ink), var(--ink)) 0 5px / 16px 2px no-repeat,
+        linear-gradient(var(--ink), var(--ink)) 0 10px / 16px 2px no-repeat;
+    }
+
+    .sidebar-fab.expanded::before {
+      width: 10px;
+      height: 10px;
+      border-left: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+      background: none;
+      transform: rotate(45deg);
+      margin-left: 4px;
+    }
+
+    .app.sidebar-collapsed .section-title,
+    .app.sidebar-collapsed .segmented,
+    .app.sidebar-collapsed .type-group-title,
+    .app.sidebar-collapsed .type-list {
+      display: none;
+    }
+
+    .app.sidebar-collapsed .side-panel {
+      padding: 6px;
+    }
+
+    .app.sidebar-collapsed .side-top {
+      justify-content: center;
+    }
+
+    .panel { padding: 14px; }
+
+    .section-title {
+      margin: 2px 0 10px;
+      font-size: 14px;
+      font-weight: 850;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .section-title small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .step-heading {
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--cyan) 34%, var(--surface)), color-mix(in srgb, var(--blue) 13%, var(--surface)) 78%);
+      color: var(--ink);
+      border: 0;
+      padding: 10px 12px;
+      border-radius: 14px;
+      margin: -4px -4px 10px;
+      font-weight: 800;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 18%, transparent);
+    }
+
+    .step-heading + .segmented {
+      margin-top: 0;
+    }
+
+    .step-heading.second {
+      margin-top: 14px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 6px;
+      background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+
+    .mode-btn {
+      min-height: 46px;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 800;
+      transition: transform .16s ease, background .16s ease, color .16s ease;
+    }
+
+    .mode-btn.active {
+      color: #fff;
+      background: var(--accent-gradient);
+      box-shadow: 0 12px 26px rgba(34,211,238,.18);
+    }
+
+    .type-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .type-group {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .type-group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      padding: 4px 2px 0;
+      grid-column: 1 / -1;
+    }
+
+    .type-group-title span {
+      color: #94a3b8;
+      font-weight: 750;
+    }
+
+    .type-btn {
+      width: 100%;
+      min-height: 42px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 11px;
+      border-radius: 12px;
+      border: 1px solid var(--hairline);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), transparent),
+        color-mix(in srgb, var(--surface) 84%, transparent);
+      color: var(--ink);
+      text-align: left;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+
+    .type-btn:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--cyan) 45%, var(--line));
+      background: color-mix(in srgb, var(--cyan) 6%, var(--surface));
+    }
+
+    .type-btn.active {
+      border-color: color-mix(in srgb, var(--cyan) 74%, var(--line));
+      background: linear-gradient(135deg, color-mix(in srgb, var(--cyan) 18%, var(--surface)), color-mix(in srgb, var(--blue) 10%, var(--surface)));
+      box-shadow: 0 10px 26px color-mix(in srgb, var(--cyan) 14%, transparent);
+    }
+
+    .type-icon {
+      display: none;
+    }
+
+    .type-name { font-weight: 850; font-size: 14px; }
+    .type-meta { display: none; }
+    .type-arrow { color: #94a3b8; font-weight: 900; }
+
+    .main {
+      display: grid;
+      gap: 14px;
+    }
+
+    .practice {
+      min-height: 460px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      background:
+        radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--cyan) 9%, transparent), transparent 42%),
+        linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent), color-mix(in srgb, var(--surface-soft) 34%, var(--surface))),
+        var(--surface);
+    }
+
+    .practice-head {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .training-note {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--cyan) 8%, var(--surface)), var(--surface));
+    }
+
+    .note-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .training-note strong {
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .note-detail-toggle {
+      color: var(--cyan);
+      background: transparent;
+      border: 0;
+      font-weight: 850;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .training-note.expanded .note-detail-toggle::after {
+      content: "Collapse";
+    }
+
+    .training-note:not(.expanded) .note-detail-toggle::after {
+      content: "Details";
+    }
+
+    .note-detail {
+      display: none;
+      gap: 10px;
+    }
+
+    .training-note.expanded .note-detail {
+      display: grid;
+    }
+
+    .training-note p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .note-item {
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      padding: 9px;
+      background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+      min-width: 0;
+    }
+
+    .note-item b {
+      display: block;
+      color: var(--ink);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .note-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .focus-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .focus-tags span {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .meter {
+      flex: 0 0 130px;
+      height: 8px;
+      border-radius: 999px;
+      background: #dce6f2;
+      overflow: hidden;
+    }
+
+    .meter i {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      transition: width .25s ease;
+    }
+
+    .question-zone {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 26px 14px 18px;
+      gap: 14px;
+    }
+
+    .mode-line {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .question {
+      width: 100%;
+      color: var(--ink);
+      font-size: clamp(38px, 6.4vw, 78px);
+      line-height: 1.18;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+      text-wrap: balance;
+    }
+
+    .question.long { font-size: clamp(28px, 4.5vw, 52px); }
+    .question.xlong { font-size: clamp(22px, 3.2vw, 40px); }
+
+    .answer-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input {
+      width: 100%;
+      height: 56px;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      outline: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), transparent),
+        color-mix(in srgb, var(--surface-soft) 56%, var(--surface));
+      color: var(--ink);
+      text-align: center;
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    input::placeholder {
+      color: color-mix(in srgb, var(--muted) 82%, transparent);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--cyan) 16%, transparent);
+    }
+
+    input:disabled {
+      color: #94a3b8;
+      background: var(--surface-soft);
+      cursor: not-allowed;
+    }
+
+    .action {
+      height: 56px;
+      min-width: 82px;
+      padding: 0 17px;
+      border-radius: 14px;
+      color: #fff;
+      font-weight: 850;
+      white-space: nowrap;
+      transition: transform .16s ease, filter .16s ease, opacity .16s ease;
+    }
+
+    .submit { background: linear-gradient(135deg, var(--blue), color-mix(in srgb, var(--blue) 68%, var(--cyan))); }
+    .submit.hidden-submit { display: none; }
+    .start { background: linear-gradient(135deg, var(--green), var(--cyan)); }
+    .skip { background: #475569; }
+    .end { background: var(--red); }
+    .end-round { background: #64748b; }
+    .action:hover:not(:disabled) { transform: translateY(-1px); filter: saturate(1.08); }
+    .action:disabled { opacity: .45; cursor: not-allowed; }
+
+    .feedback {
+      min-height: 24px;
+      padding: 0 8px;
+      margin-top: -8px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .feedback.ok {
+      color: var(--green);
+    }
+
+    .feedback.bad {
+      color: var(--red);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .summary .stat {
+      background: var(--panel-fill);
+      min-height: 74px;
+    }
+
+    .records {
+      display: grid;
+      gap: 8px;
+    }
+
+    .record-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ghost-btn {
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1px solid var(--hairline);
+      background: var(--panel-fill);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .record-list {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .record-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      background: var(--panel-fill);
+    }
+
+    .record-item strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    .record-score {
+      color: var(--ink);
+      font-weight: 900;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .empty {
+      padding: 13px;
+      border: 1px dashed var(--hairline);
+      border-radius: 12px;
+      color: var(--muted);
+      text-align: center;
+      background: color-mix(in srgb, var(--surface) 72%, transparent);
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 12px; }
+      .topbar, .layout { grid-template-columns: 1fr; }
+      .app.sidebar-collapsed .layout { grid-template-columns: 38px minmax(0, 1fr); }
+      .app.sidebar-collapsed .side-panel { padding: 6px 5px; }
+      .stats { min-width: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .brand { align-items: stretch; flex-direction: column; }
+      .toolbar-actions { position: static; justify-content: flex-end; margin-left: 0; }
+      .status-pill { width: auto; min-width: 0; }
+      .stats, .summary { grid-template-columns: repeat(2, 1fr); }
+      .segmented { grid-template-columns: 1fr; }
+      .practice { min-height: 390px; }
+      .practice-head { align-items: flex-start; flex-direction: column; }
+      .meter { width: 100%; flex-basis: 8px; }
+      .note-grid { grid-template-columns: 1fr; }
+      .answer-row { grid-template-columns: 1fr; }
+      .action { width: 100%; }
+      .record-item { grid-template-columns: 1fr; }
+      .record-score { text-align: left; }
+      .kb-panel { width: 95vw !important; max-height: 85vh; }
+      .kb-mul-table { font-size: 10px; }
+    }
+    .kb-overlay{display:none;position:fixed;inset:0;background:rgba(7,19,31,.58);backdrop-filter:blur(8px);z-index:999;place-items:center;padding:18px}
+    .kb-overlay.open{display:grid}
+    .kb-panel{background:var(--panel-fill);border:1px solid var(--hairline);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.18);width:min(860px,100%);max-height:88vh;display:grid;grid-template-rows:auto auto 1fr;overflow:hidden}
+    .kb-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+    .kb-header h2{margin:0;font-size:20px}
+    .kb-tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+    .kb-tab{padding:10px;border:none;background:transparent;color:var(--muted);font-weight:800;font-size:14px;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s}
+    .kb-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+    .kb-tab:hover{color:var(--blue)}
+    .kb-content{overflow-y:auto;padding:18px 20px}
+    .kb-section h3{margin:0 0 14px;font-size:17px;color:var(--ink)}
+    .kb-card{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;background:var(--surface-soft)}
+    .kb-card h4{margin:0 0 8px;font-size:15px;color:var(--ink)}
+    .kb-card p{margin:4px 0;font-size:13px;line-height:1.65;color:var(--muted)}
+    .kb-example{background:color-mix(in srgb, var(--blue) 12%, var(--surface));border-left:3px solid var(--blue);padding:6px 10px;border-radius:0 6px 6px 0;font-family:'Courier New',monospace;font-size:13px!important;color:var(--ink)!important}
+    .kb-table-wrap{overflow-x:auto}
+    .kb-mul-table{border-collapse:collapse;width:100%;font-size:12px}
+    .kb-mul-table th,.kb-mul-table td{border:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}
+    .kb-mul-table th{background:var(--blue);color:#fff;font-weight:800;position:sticky;top:0}
+    .kb-mul-table td:first-child{background:var(--blue);color:#fff;font-weight:800;position:sticky;left:0}
+    .kb-mul-table tr:hover td{background:color-mix(in srgb, var(--blue) 10%, var(--surface))}
+    .kb-mul-table tr:hover td:first-child{background:var(--blue)}
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="app">
+    <header class="topbar">
+      <section class="brand">
+        <div>
+          <h1><span>Mental Math</span><span>Trainer</span></h1>
+        </div>
+        <div class="toolbar-actions">
+          <span id="sessionState" hidden>Idle</span>
+          <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle color theme">◐</button>
+          <button class="ghost-btn" id="kbBtn" type="button" onclick="toggleKB()">Library</button>
+        </div>
+      </section>
+
+      <section class="panel stats" aria-label="Today statistics">
+        <div class="stat"><span>Today</span><strong id="todayTotal">0</strong></div>
+        <div class="stat"><span>Accuracy</span><strong id="todayAcc">0%</strong></div>
+        <div class="stat"><span>Current Streak</span><strong id="streak">0</strong></div>
+        <div class="stat"><span>Best Streak</span><strong id="bestStreak">0</strong></div>
+      </section>
+    </header>
+
+    <section class="layout">
+      <aside class="panel side-panel">
+        <div class="side-top">
+          <button class="sidebar-fab" id="sidebarToggle" type="button" aria-label="Collapse sidebar" aria-expanded="true"></button>
+        </div>
+        <div class="section-title step-heading">Step 1: Choose Mode</div>
+        <div class="segmented" id="modeBtns">
+          <button class="mode-btn active" data-mode="free">Free</button>
+          <button class="mode-btn" data-mode="ten">10 Questions</button>
+          <button class="mode-btn" data-mode="timed">2 Minutes</button>
+        </div>
+
+        <div class="section-title step-heading second">Step 2: Choose Type</div>
+        <div class="type-list" id="typeBtns"></div>
+      </aside>
+
+      <main class="main">
+        <section class="panel practice">
+          <div class="practice-head">
+            <div class="meter" aria-hidden="true"><i id="progressBar"></i></div>
+          </div>
+
+          <div class="training-note" id="trainingNote">
+            <div class="note-top">
+              <strong id="noteTitle">Choose a training type first</strong>
+              <button class="note-detail-toggle" id="noteToggle" type="button" aria-expanded="false"></button>
+            </div>
+            <div class="note-detail" id="noteDetail">
+              <p id="noteText">Choose a module and level on the left. Key points will appear here before you start.</p>
+              <div class="note-grid">
+                <div class="note-item"><b>Main Steps</b><span id="noteSteps">Choose a type and prepare your mental rhythm.</span></div>
+                <div class="note-item"><b>Watch For</b><span id="noteCautions">Stabilize accuracy before speed.</span></div>
+                <div class="note-item"><b>Example</b><span id="noteExample">Example: 38 + 47 = 85</span></div>
+                <div class="note-item"><b>Goal</b><span id="noteRequirement">Clear according to the selected module.</span></div>
+              </div>
+              <div class="focus-tags" id="noteTags">
+                <span>mental math</span><span>speed</span><span>accuracy</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="question-zone">
+            <div class="mode-line" id="modeLine">Current: Free Practice · Choose a type</div>
+            <div class="question" id="qArea">Ready?</div>
+          </div>
+
+          <div class="feedback hide" id="resArea" aria-live="polite"></div>
+
+          <div class="answer-row">
+            <input id="ansInput" placeholder="Type answer, press Enter" inputmode="numeric" autocomplete="off" disabled />
+            <button class="action start" id="startBtn" disabled>Start</button>
+            <button class="action skip" id="nextBtn" disabled>Next</button>
+            <button class="action end-round" id="endRoundBtn" disabled>End Round</button>
+            <button class="action submit hidden-submit" id="submitBtn" type="button">Submit</button>
+          </div>
+        </section>
+
+        <section class="summary" aria-label="Round statistics">
+          <div class="stat"><span>Submitted</span><strong id="doneNum">0</strong></div>
+          <div class="stat"><span>Correct</span><strong id="rightNum">0</strong></div>
+          <div class="stat"><span>Accuracy</span><strong id="accNum">0%</strong></div>
+          <div class="stat"><span>Time</span><strong id="timeNum">0s</strong></div>
+        </section>
+
+        <section class="panel records">
+          <div class="section-title">
+            Recent Training Records
+            <span class="record-tools">
+              <button class="ghost-btn" id="restartBtn">Restart</button>
+              <button class="ghost-btn" id="clearBtn">Clear</button>
+            </span>
+          </div>
+          <div class="record-list" id="historyList"></div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <!-- Knowledge base panel -->
+  <div class="kb-overlay" id="kbOverlay" onclick="toggleKB()">
+    <div class="kb-panel" id="kbPanel" onclick="event.stopPropagation()">
+      <div class="kb-header">
+        <h2>Mental Math Library</h2>
+        <button class="ghost-btn" onclick="toggleKB()">Close</button>
+      </div>
+      <div class="kb-tabs">
+        <button class="kb-tab active" onclick="switchKBTab('methods',this)">Methods</button>
+        <button class="kb-tab" onclick="switchKBTab('table',this)">Table</button>
+        <button class="kb-tab" onclick="switchKBTab('tips',this)">Shortcuts</button>
+      </div>
+      <div class="kb-content" id="kbContent">
+        <div class="kb-section" id="kb-methods">
+          <h3>Core Calculation Methods</h3>
+          <div class="kb-card"><h4>Addition</h4><p><b>Make-a-round-number:</b> Push a number close to a ten or hundred first, then adjust back the difference.</p><p class="kb-example">38 + 47 = 38 + 50 - 3 = 88 - 3 = 85</p><p><b>Stepwise method:</b> Split by place value and add from high place to low place.</p><p class="kb-example">386 + 247: 300+200=500, 80+40=120, 6+7=13 -> 633</p></div>
+          <div class="kb-card"><h4>Subtraction</h4><p><b>Complement method:</b> Treat the subtrahend as a nearby round number, subtract the round number, then adjust back.</p><p class="kb-example">735 - 298 = 735 - 300 + 2 = 437</p><p><b>Splitting:</b> Convert subtraction into familiar operations.</p><p class="kb-example">17 - 9 = 17 - 10 + 1 = 8</p></div>
+          <div class="kb-card"><h4>Multiplication</h4><p><b>Distributive law:</b> Split one factor into a round ten plus a tail.</p><p class="kb-example">16 x 7 = 10x7 + 6x7 = 70 + 42 = 112</p><p><b>Mirror method:</b> Same tens and complementary ones: front digit x (front digit + 1), then append ones x ones.</p><p class="kb-example">34 x 36: 3x4=12, 4x6=24 -> 1224</p></div>
+          <div class="kb-card"><h4>Division</h4><p><b>Estimate quotient:</b> Start from the high place, estimate step by step, and verify.</p><p class="kb-example">648 / 6: 600/6=100, 48/6=8 -> 108</p><p><b>Division with remainder:</b> First find the largest integer quotient, then remainder = dividend - quotient x divisor.</p><p class="kb-example">697 / 8: 8x87=696, 697-696=1 -> quotient 87 remainder 1</p></div>
+        </div>
+        <div class="kb-section" id="kb-table" style="display:none">
+          <h3>Multiplication Table to 20</h3>
+          <div class="kb-card"><h4>Tips for Memorizing the 10-20 Table</h4>
+            <p><b>Multiples of 11:</b> 11xn = nx10 + n, meaning add n after 10n.</p>
+            <p class="kb-example">11x12 = 120+12 = 132 | 11x15 = 150+15 = 165</p>
+            <p><b>Multiples of 12:</b> 12xn = 10xn + 2xn. Calculate the ten-times part first, then add double.</p>
+            <p class="kb-example">12x13 = 130+26 = 156 | 12x16 = 160+32 = 192</p>
+            <p><b>Multiples of 15:</b> 15xn = 10xn + 5xn = 10xn + nx10/2</p>
+            <p class="kb-example">15x14 = 140+70 = 210 | 15x18 = 180+90 = 270</p>
+            <p><b>Squares:</b> 11²=121, 12²=144, 13²=169, 14²=196, 15²=225, 16²=256, 17²=289, 18²=324, 19²=361, 20²=400</p>
+            <p><b>Symmetry:</b> axb = bxa, so you only need to remember half.</p>
+            <p class="kb-example">13x17 = 17x13 = 221; remember just one direction.</p>
+            <p><b>Numbers near 20:</b> 19xn = 20xn - n, and 18xn = 20xn - 2xn.</p>
+            <p class="kb-example">19x15 = 300-15 = 285 | 18x14 = 280-28 = 252</p>
+          </div>
+          <div class="kb-table-wrap"><table class="kb-mul-table"><thead><tr><th>x</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th></tr></thead><tbody id="mulTableBody"></tbody></table></div>
+        </div>
+        <div class="kb-section" id="kb-tips" style="display:none">
+          <h3>Shortcut Collection</h3>
+          <div class="kb-card"><h4>Audio-Image Addition</h4><p><b>Idea:</b> Build a sound image of the numbers in your head, fix hundreds, tens, and ones by place, then merge from high place to low place.</p><p>• Read the number clearly and fix each digit’s position in your head.</p><p>• Merge from the high place. Carries should immediately land in the matching position.</p><p>• Do not stare only at the ones; do not let low-place calculation crowd out high-place memory.</p><p class="kb-example">386 + 247: 300+200=500, 80+40=120, 6+7=13 -> 633</p><p class="kb-example">4386 + 2747: 4300+2700=7000, 86+47=133 -> 7133</p></div>
+          <div class="kb-card"><h4>Complement Subtraction</h4><p><b>Idea:</b> Calculate from high place to low place using complements to avoid the mess of repeated borrowing.</p><p>• <b>First place:</b> first digit of minuend - (first digit of subtrahend + 1)</p><p>• <b>Middle places:</b> minuend up to that place + the 9-complement of the corresponding subtrahend digit</p><p>• <b>Ones:</b> remaining minuend + the 10-complement of the subtrahend ones digit</p><p class="kb-example">343 - 191: first 3-(1+1)=1, then 14+(9-complement of 9 is 0)=14, finally 143+(10-complement of 1 is 9)=152</p><p class="kb-example">735 - 298: first 7-(2+1)=4, then 73+(9-complement of 9 is 0)=73, finally 735+(10-complement of 8 is 2)=437</p><p class="kb-example">6240 - 1996: first 6-(1+1)=4, then 62+(9-complement of 9 is 0)=62, 624+(9-complement of 9 is 0)=624, finally 6240+(10-complement of 6 is 4)=4244</p></div>
+          <div class="kb-card"><h4>Mirror Multiplication</h4><p><b>Idea:</b> When two numbers have the same tens/front part and complementary ones/tail (sum to 10), use the shortcut formula.</p><p>• Front x (front+1) gives the first part.</p><p>• Tail x tail gives the second part; pad to two digits if needed.</p><p>• Join the two parts for the answer.</p><p class="kb-example">34 x 36: 3x4=12, 4x6=24 -> 1224</p><p class="kb-example">304 x 306: 30x31=930, 4x6=24 -> 93024</p><p class="kb-example">1204 x 1206: 120x121=14520, 4x6=24 -> 1452024</p></div>
+          <div class="kb-card"><h4>Leading Division</h4><p><b>Idea:</b> Exact division drill. Look first at the divisor and the leading digit of the quotient, then recover the exact result quickly.</p><p>• Only exact division problems are used; the answer must be an integer.</p><p>• Start from the high place of the dividend and estimate step by step.</p><p>• Verify by multiplication: quotient x divisor = dividend.</p><p class="kb-example">648 / 6: 600/6=100, 48/6=8 -> 108</p><p class="kb-example">5327 / 143: estimate quotient 37; 143x37=5291... adjust as needed</p></div>
+          <div class="kb-card"><h4>x11 Shortcut (Vedic Math)</h4><p><b>Rule:</b> First and last digits stay unchanged; write sums of adjacent digits in the middle, carrying when the sum reaches 10.</p><p class="kb-example">35 x 11 -> first 3, last 5, middle 3+5=8 -> 385</p><p class="kb-example">78 x 11 -> first 7, last 8, middle 7+8=15 with carry -> 858</p><p class="kb-example">234 x 11 -> first 2, last 4, middle 2+3=5 and 3+4=7 -> 2574</p></div>
+          <div class="kb-card"><h4>Squares Ending in 5</h4><p><b>Rule:</b> Remove the 5, multiply the remaining number by one more than itself, then append 25.</p><p class="kb-example">35² -> 3x4=12, append 25 -> 1225</p><p class="kb-example">65² -> 6x7=42, append 25 -> 4225</p><p class="kb-example">105² -> 10x11=110, append 25 -> 11025</p></div>
+          <div class="kb-card"><h4>Multiplication Near 100</h4><p><b>Rule:</b> Find each number’s difference from 100. Front = 100 minus the sum of the differences; tail = product of the differences, padded to two digits.</p><p class="kb-example">96 x 94 -> differences are -4 and -6; front 100-10=90; tail 4x6=24 -> 9024</p><p class="kb-example">103 x 97 -> differences +3 and -3; front 100+0=100; tail 3x3=09 -> 10009</p></div>
+          <div class="kb-card"><h4>Magic-Number Multiplication</h4><p><b>Source:</b> Zhang Chengqi, Magic-Number Multiplication.</p><p><b>11-24 squares:</b> a=m+10; a²=(a+m)x10+m². When m² has more than one digit, it naturally merges and carries with the front.</p><p class="kb-example">17²: m=7, (17+7)x10+7²=240+49=289.</p><p><b>26-74 squares:</b> magic number = A-50; A²=(25+magic number)x100+magic number². Negative magic numbers are still substituted directly; the square is positive.</p><p class="kb-example">67²: magic number 17, (25+17)x100+17²=4200+289=4489.</p><p class="kb-example">36²: magic number -14, (25-14)x100+(-14)²=1100+196=1296.</p><p><b>76-124 squares:</b> magic number = A-100; A²=(A+magic number)x100+magic number². If the square has fewer than two digits, pad with 0; if more, carry naturally.</p><p class="kb-example">112²: magic number 12, (112+12)x100+12²=12400+144=12544.</p><p class="kb-example">84²: magic number -16, (84-16)x100+(-16)²=6800+256=7056.</p><p><b>All-purpose square method:</b> m is the difference between A and a nearby round ten. A²=(A²-m²)+m²=(A-m)(A+m)+m².</p><p class="kb-example">28²: m=2, 28²=28²-2²+2²=(28-2)(28+2)+2²=26x30+4=784.</p><p><b>Multiplying any two numbers:</b> Let a1&lt;a2 and m=(a2-a1)/2. With the same parity, a1xa2=(a1+m)²-m². With one odd and one even, adjust one step to make same parity, then add back once.</p><p class="kb-example">36x49=35x49+49=(35+7)²-7²+49=42²-7²+49=1764.</p><p><b>Advanced arbitrary square:</b> A=m1x100+m2; A²=m1x(A+m2)x100+m2².</p><p class="kb-example">234²: m1=2, m2=34, 2x(234+34)x100+34²=53600+1156=54756.</p></div>
+          <div class="kb-card"><h4>Magic Math in Daily Life: Supplement</h4><p><b>Any square:</b> Pick a convenient difference D. A²=(A+D)(A-D)+D².</p><p class="kb-example">314²=(314+14)x(314-14)+14²=328x300+196=98596.</p><p><b>Cube:</b> A³=(A-D)xAx(A+D)+D²xA.</p><p class="kb-example">92³=90x92x94+2²x92=778688.</p><p><b>Multiplying two numbers:</b> When close to a square, use midpoint square minus squared difference; near a round ten or hundred, shift both numbers and correct.</p><p class="kb-example">92x94=93²-1=8648; 92x94=90x96+2x4=8648.</p><p><b>Estimation:</b> Round to thousands, hundreds, or tens first. For multiplication, add or subtract the same number from both factors to approach an easier base.</p></div>
+          <div class="kb-card"><h4>Vedic Math Multiplication</h4><p><b>Centered around a round number:</b> When a round ten, hundred, or thousand lies between A1 and A2, use the same square method: middle number squared minus difference squared.</p><p class="kb-example">17x23=20²-3²=400-9=391.</p><p><b>Near 100:</b> When at least one factor is near 100, use the base-difference method: cross add/subtract for the front, multiply differences for the tail.</p><p class="kb-example">91x91=(91-9)x100+9x9=8281; 19x99=(19-1)x100+81x1=1881.</p><p><b>Number ending in 5 times an even number:</b> Divide the even number by 2, 4, or 8; multiply the number ending in 5 by 2, 4, or 8; then multiply the two results.</p><p class="kb-example">22x15=(22/2)x(15x2)=11x30=330.</p></div>
+          <div class="kb-card"><h4>Divisibility, Decimals, and Magic Numbers</h4><p><b>Divisibility:</b> For 4, check whether the last two digits are divisible by 4. For 8, check the last three digits. For 3, the digit sum must be divisible by 3. For 9, the digit sum must be divisible by 9. For 6, the number must be even and its digit sum divisible by 3.</p><p><b>11 divisibility:</b> From left to right, alternately subtract and add digits. The result should be 0 or a multiple of 11.</p><p><b>7 divisibility:</b> Add or subtract multiples of 7 and see whether the simplified number is divisible by 7. This also works for other odd numbers not ending in 5.</p><p><b>Fractions to decimals:</b> Learn patterns for denominators 2 through 11. Fractions with denominator 7 rotate around 142857.</p><p class="kb-example">1/7=0.142857..., 2/7=0.285714...</p><p><b>Modulo-9 error check:</b> When the total-sum difference is 0 or negative, add 9 to the difference and compare again. Good for checking arithmetic.</p><p><b>Magic number:</b> (A x 2 + 12) / 2 - A always equals 6. For a three-digit number, arrange digits high-to-low and low-to-high: ABC-CBA=DEF, then DEF+FED=1089.</p><p><b>Day of the week:</b> month code + date + year code, then reduce by weekday cycle.</p></div>
+          <div class="kb-card"><h4>24 Game Tips</h4><p><b>Core idea:</b> Use basic anchors such as 3x8=24, 4x6=24, 12x2=24, and 15+9=24.</p><p>• First look for two numbers that can help make 24.</p><p>• Use division to create larger effects, such as 8/(1-2/3)=24.</p><p>• Use 1 flexibly: multiplying by 1 keeps a value unchanged; adding/subtracting 1 fine-tunes.</p><p class="kb-example">(1, 5, 5, 5) -> 5x(5-1/5) = 5x4.8 = 24</p><p class="kb-example">(3, 3, 8, 8) -> 8/(3-8/3) = 8/(1/3) = 24</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TYPES = [
+      makeType(1, '+', 'Addition to 100', 'Basic Training', 'Basic addition', 'Look at the ones first, then the tens, and build a direct response.', 'Do not skip steps just to go fast. When you miss, slow down and drill common combinations.', '38 + 47 = 85', 'Clear after 20 correct in a row', ['basic', '20 streak', 'reaction']),
+      makeType(2, '-', 'Subtraction to 20', 'Basic Training', 'Basic subtraction', 'Judge the distance first, then use familiar decomposition within 10 to get the answer.', 'Keep the subtraction direction clear. Do not mix up the difference and the complement.', '17 - 9 = 8', 'Clear after 20 correct in a row', ['basic', '20 streak', 'direction']),
+      makeType(15, 'x', 'Multiplication to 20', 'Basic Training', 'Basic multiplication', 'Fix one factor first, then use repeated multiples or table recall to get the answer quickly.', 'Do not treat multiplication as slow addition. Drill the tables within 10 and teen-number products first.', '16 x 7 = 112', 'Clear after 20 correct in a row', ['basic', 'multiplication', '20 streak']),
+      makeType(4, '3', '3-digit', 'Audio-Image Addition', '3-digit addition', 'Read the three-digit numbers clearly, fix hundreds, tens, and ones in your head, then combine from the high place.', 'Do not stare only at the ones. Carries must immediately land in the correct place.', '386 + 247 = 633', 'Answer 6 correctly in 2 minutes', ['audio-image', '3-digit', '6 questions']),
+      makeType(5, '4', '4-digit', 'Audio-Image Addition', '4-digit addition', 'Split the four-digit number into the front two digits and the last two digits, stabilize the structure, then combine.', 'Do not let low-place calculation push out high-place memory. Pause briefly if needed.', '4386 + 2747 = 7133', 'Answer 6 correctly in 2 minutes', ['audio-image', '4-digit', '6 questions']),
+      makeType(6, '5', '5-digit', 'Audio-Image Addition', '5-digit addition', 'Build the high-place frame first, then handle the last three digits and combine the whole result.', 'If capacity is unstable, slow down first so you do not remember the digits but lose their positions.', '54386 + 22747 = 77133', 'Answer 6 correctly in 2 minutes', ['audio-image', '5-digit', '6 questions']),
+      makeType(7, 'M', 'Mixed digits', 'Audio-Image Addition', 'Mixed-length addition', 'Judge the digit length first. Mentally pad the shorter number, then combine by place.', 'Do not let changing digit lengths disrupt rhythm. Align first, calculate second.', '9386 + 42747 = 52133', 'Answer 6 correctly in 2 minutes', ['audio-image', 'mixed', '6 questions']),
+      makeType(3, '5', '5-number sum', 'Audio-Image Addition', 'Advanced chained addition', 'Split the five numbers into two or three groups, accumulate while remembering, then combine the totals.', 'Focus on not missing a number. Clear grouping is better than forcing all numbers at once.', '386 + 247 + 591 + 438 + 726 = 2388', 'Answer 2 correctly in 2 minutes', ['chained sum', 'grouping', '2 questions']),
+      makeType(8, '3', '3-digit', 'Complement Subtraction', '3-digit complement subtraction', 'Treat the subtrahend as a nearby ten or hundred, subtract the round number first, then adjust back.', 'The adjustment direction must be clear: if you subtracted too much, add back; if too little, subtract more.', '735 - 298 = 735 - 300 + 2 = 437', 'Answer 4 correctly in 2 minutes', ['complement', '3-digit', '4 questions']),
+      makeType(12, '4', '4-digit', 'Complement Subtraction', '4-digit complement subtraction', 'Find a nearby hundred or thousand for the subtrahend, then use the difference to adjust.', 'Hold the intermediate result briefly. Do not change the sign during the adjustment.', '6240 - 1996 = 6240 - 2000 + 4 = 4244', 'Answer 4 correctly in 2 minutes', ['complement', '4-digit', '4 questions']),
+      makeType(13, '5', '5-digit', 'Complement Subtraction', '5-digit complement subtraction', 'Use thousands or ten-thousands as the big frame, then handle the tail adjustment.', 'Align the digit positions first. Do not drop zeros in large-number subtraction.', '83520 - 29980 = 83520 - 30000 + 20 = 53540', 'Answer 4 correctly in 2 minutes', ['complement', '5-digit', '4 questions']),
+      makeType(11, '--', 'Multi-digit chain subtraction', 'Complement Subtraction', '3- to 5-digit chained subtraction', 'Keep the current result after each subtraction and prefer hundred/thousand complements.', 'Do not merge several subtrahends randomly first. In chained subtraction, rhythm matters more than speed.', '9830 - 997 - 1980 - 495 = 6358', 'Answer 1 correctly in 2 minutes', ['chained subtraction', '3-5 digit', '1 question']),
+      makeType(14, '±', 'Mixed multi-digit add/subtract', 'Mixed Training', '3- to 5-digit mixed addition and subtraction', 'Mark each number as positive or negative first, then maintain one current result in order.', 'Switching plus and minus is the easiest place to slip. Read the sign before the number.', '5820 + 397 - 1998 + 4060 = 8279', 'Answer 1 correctly in 2.5 minutes', ['mixed add/subtract', '3-5 digit', '1 question']),
+      makeType(9, 'x', '2-digit', 'Mirror Multiplication', '2-digit mirror multiplication', 'Identify same tens and complementary ones. Multiply the tens by the next ten, then append the ones product.', 'If the ones product is less than two digits, pad it with 0. For example, 1 x 9 is written as 09.', '34 x 36 = 1224', 'Clear after 20 correct', ['mirror', '2-digit', '20 questions']),
+      makeType(16, '3', '3-digit', 'Mirror Multiplication', '3-digit mirror multiplication', 'Identify same first two digits and complementary last digits. Multiply the front by the next front, then append the last-digit product.', 'The tail must be appended as two digits. For 0 x 10, write 00.', '304 x 306 = 93024', 'Clear after 20 correct', ['mirror', '3-digit', '20 questions']),
+      makeType(17, '4', '4-digit', 'Mirror Multiplication', '4-digit mirror multiplication', 'Identify same first three digits and complementary last digits. Multiply the first three digits by the next number, then append the padded tail.', 'The front multiplication is longer. Stabilize the front result first, then process the two-digit tail.', '1204 x 1206 = 1452024', 'Clear after 20 correct', ['mirror', '4-digit', '20 questions']),
+      makeType(18, 'M', 'Mixed multi-digit', 'Mirror Multiplication', 'Mixed multi-digit mirror multiplication', 'Judge the digit length first, then apply the mirror structure: same front, complementary tail.', 'With mixed digit lengths, first see how many front digits there are. Do not lose zeros when appending the tail.', '704 x 706 = 497024', 'Clear after 20 correct', ['mirror', 'mixed', '20 questions']),
+      makeType(10, '/', 'Leading Division', 'Skill Training', 'Exact division drill', 'Look first at the relationship between the divisor and the leading digit of the quotient, then quickly recover the exact result.', 'Only exact division problems are used. Do not estimate with decimals; the answer must be an integer.', '648 / 6 = 108', 'Raise speed after accuracy is stable', ['exact division', 'reaction', 'speed']),
+      makeType(19, 'r', 'Division with Remainders', 'Skill Training', 'Mental division with remainders', 'Estimate the quotient, multiply the divisor by the quotient, then subtract the product from the dividend to get the remainder.', 'Watch whether the remainder at the next step is large enough to subtract another divisor. The remainder must be smaller than the divisor.', '697 / 8: 8 x 87 = 696, so the quotient is 87 remainder 1.', 'Clear after 20 correct', ['division', 'remainder', '20 questions']),
+      makeType(20, '.÷', 'Decimal Division', 'Skill Training', 'Integer division to two decimals', 'Do integer division first, keep dividing the remainder, and round the result to two decimals.', 'Pay attention to the decimal point. Multiply the remainder by 10 and continue; round the final digit.', '7 / 3 = 2.33: 7÷3=2 R1, 10÷3=3 R1, 10÷3=3 R1 -> 2.33', 'Clear after 20 correct', ['decimal', 'division', 'two decimals']),
+      makeType(21, '12', '1-and-2 Set', 'Reverse Mental Math', '24 game with 1 and 2', 'The four numbers must include 1 and 2. Use addition, subtraction, multiplication, division, and parentheses to make 24.', 'Use 1 and 2 flexibly: 1 can preserve a value by multiplying, or nudge with +1; 2 can be used in addition/subtraction or multiplication/division.', '(1, 2, 6, 8) -> 1x2x6+8=20, but (6-2)x(8-1)=24.', 'Clear after 10 correct', ['24 game', '1 and 2', 'make 24']),
+      makeType(22, 'Seq', 'Consecutive Set', 'Reverse Mental Math', '24 game with consecutive numbers', 'The four numbers include consecutive natural numbers, such as 3, 4, 5. Use operations to make 24.', 'Consecutive numbers work well with multiplication and differences, such as (a-1)xa or ax(b+c).', '(3, 4, 5, 8) -> 3x8x(5-4)=24; (5-3)x4+8=16 is wrong.', 'Clear after 10 correct', ['24 game', 'consecutive', 'make 24']),
+      makeType(23, 'Same', 'Repeated Set', 'Reverse Mental Math', '24 game with repeated numbers', 'The four numbers include repeats, such as two 5s. Use operations to make 24.', 'Repeated numbers can be merged, such as 5+5=10 and then multiply, or split and used separately.', '(5, 5, 5, 4) -> (5-4)x5x5=25, but 5x5-5+4=24.', 'Clear after 10 correct', ['24 game', 'repeated', 'make 24']),
+      makeType(24, '≠', 'All Different', 'Reverse Mental Math', '24 game with four distinct numbers', 'All four numbers are different. Use operations and parentheses to make 24.', 'Some combinations may have no solution, so you need to flexibly change operation order.', '(1, 6, 7, 8) -> 6÷(1-7÷8)=24; (7-1)x(8-6)=12 is wrong.', 'Clear after 10 correct', ['24 game', 'distinct', 'make 24']),
+      makeType(25, '!', 'Unique-Solution Set', 'Reverse Mental Math', '24 game with only one solution', 'Only one operation pattern can make 24, testing deeper thinking.', 'Unique-solution problems need exhaustive checking. Start with multiplication, then try addition/subtraction combinations.', '(1, 5, 5, 5) -> 5x(5-1÷5)=24, and that is the only solution.', 'Clear after 5 correct', ['24 game', 'unique', 'make 24']),
+      makeType(26, '11', 'x11 Shortcut', 'Speed Multiplication', 'Vedic x11 shortcut', 'Keep the first and last digits unchanged; write adjacent digit sums in the middle, carrying when the sum reaches 10.', 'Carry when an adjacent digit sum is at least 10. The method also works for three-digit numbers times 11.', '35 x 11: first 3, last 5, middle 3+5=8, answer 385.', 'Clear after 20 correct', ['shortcut', 'x11', 'Vedic math']),
+      makeType(27, '5²', 'Square Ending in 5', 'Speed Multiplication', 'Fast square for numbers ending in 5', 'Remove the final 5, multiply the remaining number by the next number, then append 25.', 'The front product may need a natural carry. This method works for all numbers ending in 5.', '35²: 3x4=12, append 25, answer 1225.', 'Clear after 20 correct', ['shortcut', 'square', 'ending in 5']),
+      makeType(28, '≈100', 'Near-100 Multiplication', 'Speed Multiplication', 'Multiplying numbers near 100', 'Find each number’s difference from 100; subtract the sum of the differences from 100, then append the product of the differences.', 'If the product of the differences has fewer than two digits, pad with 0. This works near 10, 100, or 1000.', '96 x 94: differences are -4 and -6; 100-10=90; 4x6=24; answer 9024.', 'Clear after 20 correct', ['shortcut', 'near 100', 'complement']),
+      makeType(29, '□²', '51-59', 'Magic-Number Squares', 'Square with base 50', 'Magic number = A - 50. Use (25 + magic number) x 100 + magic number².', 'When the magic-number square exceeds two digits, carry naturally; do not simply paste the tail.', '57²: magic number 7, (25+7)x100+7²=3200+49=3249.', 'Clear after 20 correct', ['magic number', 'square', '51-59']),
+      makeType(30, '□²', '41-49', 'Magic-Number Squares', 'Square with base 50', 'Magic number = A - 50. When the magic number is negative, still use (25 + magic number) x 100 + magic number².', 'The front part will be less than 25; the tail is still the magic-number square.', '43²: magic number -7, (25-7)x100+(-7)²=1800+49=1849.', 'Clear after 20 correct', ['magic number', 'square', '41-49']),
+      makeType(31, '□²', '101-109', 'Magic-Number Squares', 'Square with base 100', 'Magic number = A - 100. Use (A + magic number) x 100 + magic number².', 'If the magic-number square has fewer than two digits, pad with 0.', '106²: magic number 6, (106+6)x100+6²=11200+36=11236.', 'Clear after 20 correct', ['magic number', 'square', '101-109']),
+      makeType(32, '□²', '91-99', 'Magic-Number Squares', 'Square with base 100', 'Magic number = A - 100. When negative, the front part becomes smaller.', 'The tail is the magic-number square; pad to two digits if needed.', '94²: magic number -6, (94-6)x100+(-6)²=8800+36=8836.', 'Clear after 20 correct', ['magic number', 'square', '91-99']),
+      makeType(33, '□²', '11-24', 'Magic-Number Squares', '11-24 magic square', 'Let a = m + 10. Use a² = (a + m) x 10 + m².', 'When m² has more than one digit, merge it with the front part; do not hard-paste only the last digit.', '17²: m=7, (17+7)x10+7²=240+49=289.', 'Clear after 20 correct', ['square', 'basic', '11-24']),
+      makeType(34, '□²', '61-74', 'Magic-Number Squares', 'Square with base 50', 'Magic number = A - 50. Use (25 + magic number) x 100 + magic number².', 'When the magic number is greater than 10, the tail usually needs to carry.', '67²: magic number 17, (25+17)x100+17²=4200+289=4489.', 'Clear after 20 correct', ['magic number', 'square', '61-74']),
+      makeType(35, '□²', '26-39', 'Magic-Number Squares', 'Square with base 50', 'Magic number = A - 50. Use a negative magic number for squares below 50.', 'The magic-number square is positive, and the front part uses 25 + magic number.', '36²: magic number -14, (25-14)x100+(-14)²=1100+196=1296.', 'Clear after 20 correct', ['magic number', 'square', '26-39']),
+      makeType(36, '□²', '111-124', 'Magic-Number Squares', 'Square with base 100', 'Magic number = A - 100. Use (A + magic number) x 100 + magic number².', 'When the magic number is greater than 10, the square tail needs to carry.', '112²: magic number 12, (112+12)x100+12²=12400+144=12544.', 'Clear after 20 correct', ['magic number', 'square', '111-124']),
+      makeType(37, '□²', '76-89', 'Magic-Number Squares', 'Square with base 100', 'Magic number = A - 100. Below 100, the magic number is negative.', 'Front = A + magic number; tail = magic-number square.', '84²: magic number -16, (84-16)x100+(-16)²=6800+256=7056.', 'Clear after 20 correct', ['magic number', 'square', '76-89']),
+      makeType(38, '□²', '126-199', 'Magic-Number Squares', 'Advanced 3-digit squares', 'Let A = m1 x 100 + m2. Use A² = m1 x (A + m2) x 100 + m2².', 'When the tail exceeds two digits, it must carry and merge.', '134²: m1=1, m2=34, 1x(134+34)x100+34²=16800+1156=17956.', 'Clear after 20 correct', ['square', 'advanced', '126-199']),
+      makeType(39, '□²', '210-499', 'Magic-Number Squares', 'Advanced large squares', 'Let A = m1 x 100 + m2. Use A² = m1 x (A + m2) x 100 + m2².', 'For larger numbers, stabilize m1 and m2 first; if the tail square exceeds two digits, merge the carry.', '234²: m1=2, m2=34, 2x(234+34)x100+34²=53600+1156=54756.', 'Clear after 20 correct', ['square', 'large', '210-499']),
+      makeType(40, '□²', '21-24 and Any Number', 'Magic-Number Squares', 'Mixed square practice', 'Mix 21-24, the all-purpose square method, and common arbitrary-number squares to train switching ability.', 'Judge the interval first. Near a round ten, use A²=(A-m)(A+m)+m². For three digits and above, use the m1x100+m2 formula.', '28²: m=2, (28-2)(28+2)+2²=26x30+4=784; 234²: m1=2, m2=34, 2x(234+34)x100+34²=54756.', 'Clear after 20 correct', ['square', 'mixed', 'switching']),
+      makeType(41, '×', 'Same tens, ones sum to 10', 'Special Multiplication', 'Basic mirror multiplication', 'Same tens and ones add to 10: tens x next tens, then append the product of the ones.', 'If the ones product has fewer than two digits, pad with 0.', '34x36: 3x4=12, 4x6=24, answer 1224.', 'Clear after 20 correct', ['special multiplication', 'mirror', '20 questions']),
+      makeType(42, '×', 'Tens differ by 1, ones sum to 10', 'Special Multiplication', 'Neighboring tens with complementary ones', 'Treat the two numbers around their midpoint as a difference of squares, then correct with the squared difference.', 'Note that the tens differ by 1; they are not the same.', '47x53: midpoint 50, 50²-3²=2491.', 'Clear after 20 correct', ['special multiplication', 'difference of squares', '20 questions']),
+      makeType(43, '×', 'Tens sum to 10, same ones', 'Special Multiplication', 'Complementary tens with same ones', 'When tens add to 10 and ones are the same, use structured multiplication to handle it quickly.', 'The same ones are the key; do not confuse this with complementary ones.', '46x66: tens 4+6=10, same ones 6, answer 3036.', 'Clear after 20 correct', ['special multiplication', 'complement', '20 questions']),
+      makeType(44, '×', 'Any two 11-19', 'Special Multiplication', 'Teen-number products', 'Treat both numbers as 10 plus a tail: 100 + 10 x tail sum + tail product.', 'Carry the tail product and the middle part correctly.', '14x17: 100 + 10x11 + 28 = 238.', 'Clear after 20 correct', ['special multiplication', '11-19', '20 questions']),
+      makeType(45, '×', 'Any two 101-109', 'Special Multiplication', 'Small positive differences near 100', 'Treat both numbers as 100 plus their tails; the front is 100 plus the tail sum.', 'If the tail product has fewer than two digits, pad with 0.', '104x107: 111x100+28=11128.', 'Clear after 20 correct', ['special multiplication', '101-109', '20 questions']),
+      makeType(46, '×', 'Any two 91-99', 'Special Multiplication', 'Small negative differences near 100', 'Treat both numbers as 100 minus differences; the front is 100 minus the sum of the differences.', 'The tail is the product of the differences; pad with 0 if needed.', '96x93: 100-(4+7)=89, 4x7=28, answer 8928.', 'Clear after 20 correct', ['special multiplication', '91-99', '20 questions']),
+      makeType(47, '×', 'Any two 91-109', 'Special Multiplication', 'Mixed near 100', 'Use 100 as the unified base; differences can be positive or negative.', 'With one positive and one negative difference, the tail is a negative correction and must be merged into the front.', '103x97: 10000 + 0x100 - 9 = 9991.', 'Clear after 20 correct', ['special multiplication', '91-109', '20 questions']),
+      makeType(48, '×', 'Any two 51-59', 'Special Multiplication', 'Positive differences near 50', 'Treat both numbers as 50 plus magic numbers, or convert to midpoint square minus squared difference.', 'Find the midpoint first; it is steadier.', '56x58: midpoint 57, 57²-1=3248.', 'Clear after 20 correct', ['special multiplication', '51-59', '20 questions']),
+      makeType(49, '×', 'Any two 41-49', 'Special Multiplication', 'Negative differences near 50', 'Treat both numbers as 50 minus differences, or use midpoint square minus squared difference.', 'Below 50, the differences are negative, but the square correction is still subtracted.', '43x47: midpoint 45, 45²-2²=2021.', 'Clear after 20 correct', ['special multiplication', '41-49', '20 questions']),
+      makeType(50, '×', 'Any two 41-59', 'Special Multiplication', 'Mixed near 50', 'Work around 50 or the midpoint to train switching across intervals.', 'First check whether the pair crosses 50, then choose the base.', '48x57: midpoint 52.5 is not an integer, so first compute 48x56+48=2736.', 'Clear after 20 correct', ['special multiplication', '41-59', '20 questions']),
+      makeType(51, '×', 'Any two 1-99', 'General Multiplication', 'Mixed two-digit multiplication', 'Let a1<a2 and m=(a2-a1)/2. With same parity, use a1xa2=(a1+m)²-m².', 'If one is odd and the other even, adjust one number by 1 to make same parity, then add back once.', '36x49=35x49+49=(35+7)²-7²+49=1764.', 'Clear after 20 correct', ['general multiplication', '1-99', '20 questions']),
+      makeType(52, '×', 'a1<24, sum<250', 'General Multiplication', 'Small-factor general multiplication', 'For small factors, split first into multiplication within 20, then handle the remainder.', 'When a1 is small, do not take a long route; the distributive law is faster.', '18x137: 20x137-2x137=2466.', 'Clear after 20 correct', ['general multiplication', 'small factor', '20 questions']),
+      makeType(53, '×', '26<a1<49, sum<250', 'General Multiplication', 'Low-middle general multiplication', 'Prefer a base near 50 or a nearby round ten.', 'When a1 is 26-49, base 50 is often useful.', '38x96: 38x(100-4)=3648.', 'Clear after 20 correct', ['general multiplication', '26-49', '20 questions']),
+      makeType(54, '×', '51<a1<71, sum<250', 'General Multiplication', '50-70 range general multiplication', 'First see whether the numbers can be split around 50, 60, or a round ten.', 'Do not force one method. Observe the tail structure.', '64x123: 64x(120+3)=7872.', 'Clear after 20 correct', ['general multiplication', '51-71', '20 questions']),
+      makeType(55, '×', '76<a1<99, sum<250', 'General Multiplication', 'High two-digit general multiplication', 'When close to 100, prefer a 100-base or complement method.', 'Tail corrections must keep their sign.', '87x142: 87x(100+42)=12354.', 'Clear after 20 correct', ['general multiplication', '76-99', '20 questions']),
+      makeType(56, '×', '101<a1<124, sum<250', 'General Multiplication', 'Near-100 general multiplication', '101-124 works well with 100 as the base, then add corrections.', 'If the other factor is larger, first split it into 100 plus the remainder.', '112x136: 112x(100+36)=15232.', 'Clear after 20 correct', ['general multiplication', '101-124', '20 questions']),
+      makeType(57, '×', 'Tens differ <20, same parity ones', 'General Multiplication', 'Close-distance same-parity ones', 'Let a1<a2 and m=(a2-a1)/2. With same parity, directly use (a1+m)²-m².', 'Confirm m is an integer first, then calculate midpoint square and m².', '46x58: m=6, (46+6)²-6²=52²-36=2668.', 'Clear after 20 correct', ['general multiplication', 'difference of squares', '20 questions']),
+      makeType(58, '×', 'Same ones, same parity tens', 'General Multiplication', 'Same-ones structured multiplication', 'Let a1<a2 and m=(a2-a1)/2. With same parity, use (a1+m)²-m².', 'If one is odd and the other even, adjust one step first, then add back the extra amount.', '37x57: m=10, (37+10)²-10²=47²-100=2109.', 'Clear after 20 correct', ['general multiplication', 'same ones', '20 questions'])
+    ];
+
+    const MODE_NAMES = { free: 'Free Practice', ten: '10-Question Challenge', timed: '2-Minute Timer' };
+    const $ = (id) => document.getElementById(id);
+    const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    function makeType(id, icon, name, group, meta, steps, cautions, example, requirement, tags) {
+      return { id, icon, name, group, meta, steps, cautions, example, requirement, tags };
+    }
+
+    const NOTE_DETAILS = {
+      1: { caution: 'Round first, then combine. Do not answer by feel; slow down after repeated errors of the same kind.', example: '38 + 47: 38 + 40 = 78, then 78 + 7 = 85.' },
+      2: { caution: 'Confirm what is being subtracted from what. When crossing 10, use complements; do not swap the difference and minuend.', example: '17 - 9: first 17 - 10 = 7, then add back 1, answer 8.' },
+      15: { caution: 'Handle multiplication under 10 by table recall first, then teen products. Do not drag speed down with repeated addition.', example: '16 x 7: 10 x 7 = 70, 6 x 7 = 42, combine to 112.' },
+      3: { caution: 'Each number should leave a trace even if read once. Pair into groups, then combine at the end.', example: '386 + 247 + 591 + 438 + 726: first 386+247=633, 591+438=1029, then add 726 for 2388.' },
+      4: { caution: 'Align hundreds, tens, and ones. Carries should immediately land in the next place; do not only calculate ones.', example: '386 + 247: 300+200=500, 80+40=120, 6+7=13, combine to 633.' },
+      5: { caution: 'Split four digits into front two and last two. If the low part is fewer than two digits, pad with 0 to preserve position.', example: '4386 + 2747: 43+27=70, 86+47=133, carry 1 forward to get 7133.' },
+      6: { caution: 'Fix the high-place frame first. Pad zeros in the middle or low part to avoid place-value mistakes.', example: '54386 + 22747: 54+22=76, 386+747=1133, combine to 77133.' },
+      7: { caution: 'For mixed digit lengths, pad with zeros first, such as reading 9386 as 09386, then calculate by place.', example: '09386 + 42747: 09+42=51, 386+747=1133, combine to 52133.' },
+      8: { caution: 'In complement subtraction, pad zeros by place, such as 298 = 300 - 2. If you subtracted too much, add back.', example: '735 - 298: first 735 - 300 = 435, then +2, answer 437.' },
+      12: { caution: 'For four-digit subtraction, find a whole thousand or hundred first. Complements need zeros, such as 0996 and 1996.', example: '6240 - 1996: first 6240 - 2000 = 4240, then +4, answer 4244.' },
+      13: { caution: 'Align five-digit numbers first. Tail complements keep their zeros: 29980 is 20 away from 30000.', example: '83520 - 29980: first 83520 - 30000 = 53520, then +20, answer 53540.' },
+      11: { caution: 'Keep the current value after every subtraction. When a subtrahend is near a hundred or thousand, subtract the round number first, then adjust.', example: '9830 - 997 - 1980 - 495: use -1000+3, -2000+20, -500+5, answer 6358.' },
+      14: { caution: 'Read the sign before the number. For negative or shorter numbers, pad zeros to align places.', example: '5820 + 397 - 1998 + 4060: 397 is 0400-3, 1998 is 2000-2, step through to get 8279.' },
+      9: { caution: 'When the tail digits are complementary, the back part needs two digits; for example, 1 x 9 is written as 09.', example: '34 x 36: tens 3 x 4 = 12, ones 4 x 6 = 24, combine to 1224.' },
+      16: { caution: 'For three-digit problems, check whether the first two digits match. The tail result is always appended as two digits.', example: '304 x 306: front 30 x 31 = 930, tail 4 x 6 = 24, combine to 93024.' },
+      17: { caution: 'For four-digit problems, the front is longer. Calculate the first three digits x next number, then append the two-digit tail.', example: '1204 x 1206: front 120 x 121 = 14520, tail 4 x 6 = 24, combine to 1452024.' },
+      18: { caution: 'For mixed multi-digit problems, judge the front length first. The tail is complementary ones; pad if fewer than two digits.', example: '704 x 706: front 70 x 71 = 4970, tail 4 x 6 = 24, combine to 497024.' },
+      26: { caution: 'For x11 shortcuts, adjacent digit sums that reach 10 carry to the previous place. Three-digit numbers also work.', example: '35 x 11: first 3, last 5, middle 3+5=8, answer 385. 78 x 11: first 7, last 8, middle 7+8=15 with carry, answer 858.' },
+      27: { caution: 'Square ending in 5: front = n x (n+1), then append 25. n is the number after removing the final 5.', example: '35²: 3x4=12, append 25, answer 1225. 65²: 6x7=42, append 25, answer 4225.' },
+      28: { caution: 'Near-100 multiplication: pad the product of differences to two digits; subtract the sum of the differences from 100.', example: '96 x 94: differences -4 and -6, 100-(4+6)=90, 4x6=24, answer 9024.' },
+      29: { caution: 'For 51-59, the magic number is under 10, so complex carries are rare. First stabilize the front 25 + magic number.', example: '57²: magic number = 7, (25+7)x100+7²=3200+49=3249.' },
+      10: { caution: 'Only exact division is used. Verify with multiplication first; do not use decimal estimation.', example: '648 / 6: 600/6=100, 48/6=8, answer 108.' },
+      19: { caution: 'Watch whether the remainder at the next step is still large enough to subtract another divisor. The remainder must be smaller than the divisor.', example: '697 / 8: try quotient 87, 8 x 87 = 696, 697 - 696 = 1, so the answer is 87 R1.' },
+      20: { caution: 'Decimal division is place-by-place: divide the integer part first, multiply the remainder by 10 and continue, then round to two decimals.', example: '7 / 3: 7÷3=2 R1, 10÷3=3 R1, 10÷3=3 R1, rounded result 2.33.' },
+      21: { caution: '1 and 2 look small but are flexible: 1 can preserve a value by x1, and 2 can act as a bridge.', example: '(1, 2, 6, 8): try several forms until the expression reaches 24.' },
+      22: { caution: 'Consecutive numbers are good for differences and products. Parentheses change the order of operations.', example: '(3, 4, 5, 8) -> 3 x 8 x (5-4) = 24.' },
+      23: { caution: 'Repeated numbers can first be merged, or separated to serve different parts of the expression.', example: '(5, 5, 5, 4) -> 5 x 5 - 5 + 4 = 24.' },
+      24: { caution: 'For all-different sets, some combinations are truly unsolvable, but most are solvable; try division more often.', example: '(1, 6, 7, 8): keep regrouping and test division patterns.' },
+      25: { caution: 'Unique-solution problems have only one valid form, so patiently enumerate possible operation groupings.', example: '(1, 5, 5, 5) -> 5 x (5 - 1÷5) = 5 x 4.8 = 24, and it is the only solution.' }
+    };
+
+    let mode = 'free';
+    let typeId = 0;
+    let correctAns = 0;
+    let correctRemainder = null;
+    let currentQuestion = '';
+    let currentNums = null; // Four numbers for the 24 game
+    let submitted = 0;
+    let right = 0;
+    let wrong = 0;
+    let streak = 0;
+    let bestStreak = Number(localStorage.getItem('mental_best_streak') || 0);
+    let startedAt = 0;
+    let timer = null;
+    let remain = 120;
+    let locked = true;
+    let answered = false;
+    let introTimer = null;
+    let clearAnswerOnInput = false;
+
+    function renderTypeButtons() {
+      const groups = [
+        ['Basic Training', '20-correct streak'],
+        ['Audio-Image Addition', '6 regular, 2 chained'],
+        ['Complement Subtraction', 'Complements to chains'],
+        ['Mixed Training', '1 question in 2.5 minutes'],
+        ['Mirror Multiplication', '20 correct'],
+        ['Speed Multiplication', 'Vedic shortcuts'],
+        ['Magic-Number Squares', 'Segmented square drills'],
+        ['Special Multiplication', 'Structured multiplication'],
+        ['General Multiplication', 'Mixed multiplication'],
+        ['Skill Training', 'Multiplication/division reaction'],
+        ['Reverse Mental Math', '24 game']
+      ];
+      $('typeBtns').innerHTML = groups.map(([group, hint]) => {
+        const items = TYPES.filter(type => (type.group || 'Skill Training') === group);
+        return `
+          <div class="type-group">
+            <div class="type-group-title">${group} <span>${hint}</span></div>
+            ${items.map(type => `
+              <button class="type-btn" data-type="${type.id}" onclick="selectType(${type.id})">
+                <span><span class="type-name">${type.name}</span><span class="type-meta">${type.meta}</span></span>
+                <span class="type-arrow">›</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function bindEvents() {
+      $('modeBtns').addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-mode]');
+        if (!btn) return;
+        setMode(btn.dataset.mode);
+      });
+
+      $('typeBtns').addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-type]');
+        if (!btn) return;
+        selectType(Number(btn.dataset.type));
+      });
+
+      $('startBtn').addEventListener('click', () => {
+        if (!locked) finishSession(true);
+        else startSession(typeId);
+      });
+      $('submitBtn').addEventListener('click', checkAnswer);
+      $('nextBtn').addEventListener('click', checkAnswer);
+      $('endRoundBtn').addEventListener('click', () => finishSession(true));
+      $('sidebarToggle').addEventListener('click', toggleSidebar);
+      $('themeToggle').addEventListener('click', toggleTheme);
+      $('clearBtn').addEventListener('click', clearHistory);
+      $('noteToggle').addEventListener('click', toggleTrainingNote);
+      $('restartBtn').addEventListener('click', () => {
+        if (typeId) startSession(typeId);
+      });
+      $('ansInput').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') checkAnswer();
+      });
+      $('ansInput').addEventListener('input', (event) => {
+        if (clearAnswerOnInput) {
+          clearAnswerOnInput = false;
+          $('ansInput').value = (event.data || '').replace(/[^\d+\-*/().×÷x  ]/g, '');
+          return;
+        }
+        if ($('resArea')?.className.includes('ok')) hideFeedback();
+        // 24-game inputs allow operators and parentheses
+        if (typeId >= 21 && typeId <= 25) {
+          $('ansInput').value = $('ansInput').value.replace(/[^\d+\-*/().×÷x  ]/g, '');
+        } else {
+          $('ansInput').value = $('ansInput').value.replace(/[^\d.-]/g, '');
+        }
+      });
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      document.querySelectorAll('[data-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+      resetSession();
+      if (typeId) {
+        showSelectedType();
+      } else {
+        showInfo(`Switched to ${MODE_NAMES[mode]}. Choose a training type.`);
+      }
+    }
+
+    function selectType(nextTypeId) {
+      typeId = nextTypeId;
+      collapseSidebar(true);
+      resetSession();
+      document.querySelectorAll('[data-type]').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.type) === typeId);
+      });
+      showSelectedType();
+    }
+
+    function toggleSidebar() {
+      const app = document.querySelector('.app');
+      if (!app) return;
+      app.classList.toggle('sidebar-collapsed');
+      updateSidebarButton();
+    }
+
+    function collapseSidebar(value) {
+      const app = document.querySelector('.app');
+      if (!app) return;
+      app.classList.toggle('sidebar-collapsed', value);
+      updateSidebarButton();
+    }
+
+    function updateSidebarButton() {
+      const app = document.querySelector('.app');
+      const btn = $('sidebarToggle');
+      if (!app || !btn) return;
+      const collapsed = app.classList.contains('sidebar-collapsed');
+      btn.classList.toggle('expanded', !collapsed);
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    }
+
+    function toggleTheme() {
+      const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.body.dataset.theme = nextTheme;
+      localStorage.setItem('mental_theme', nextTheme);
+      updateThemeButton();
+    }
+
+    function updateThemeButton() {
+      const btn = $('themeToggle');
+      if (!btn) return;
+      const isDark = document.body.dataset.theme === 'dark';
+      btn.textContent = isDark ? '☀' : '◐';
+      btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+
+    function toggleTrainingNote() {
+      const note = $('trainingNote');
+      const expanded = !note.classList.contains('expanded');
+      note.classList.toggle('expanded', expanded);
+      $('noteToggle').setAttribute('aria-expanded', String(expanded));
+    }
+
+    function startSession(nextTypeId) {
+      if (!nextTypeId) {
+        showInfo('Choose a training type first.');
+        return;
+      }
+      typeId = nextTypeId;
+      document.querySelectorAll('[data-type]').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.type) === typeId);
+      });
+
+      resetSession();
+      renderTrainingNote();
+      locked = false;
+      startedAt = Date.now();
+      $('ansInput').disabled = false;
+      $('startBtn').disabled = false;
+      $('startBtn').textContent = 'End';
+      $('startBtn').classList.add('end');
+      $('startBtn').classList.remove('start');
+      $('submitBtn').disabled = false;
+      $('submitBtn').textContent = 'Submit';
+      $('nextBtn').disabled = false;
+      $('endRoundBtn').disabled = false;
+      $('sessionState').textContent = 'Training';
+      if (mode === 'timed') startTimer();
+      setQuestionText(getFullTypeName(typeId));
+      showInfo(`${getFullTypeName(typeId)} · get ready`);
+      introTimer = setTimeout(() => {
+        introTimer = null;
+        nextQuestion();
+      }, 520);
+    }
+
+    function resetSession() {
+      if (timer) clearInterval(timer);
+      if (introTimer) clearTimeout(introTimer);
+      timer = null;
+      introTimer = null;
+      correctAns = 0;
+      currentQuestion = '';
+      currentNums = null;
+      submitted = 0;
+      right = 0;
+      wrong = 0;
+      streak = 0;
+      startedAt = 0;
+      remain = 120;
+      locked = true;
+      answered = false;
+      clearAnswerOnInput = false;
+      $('ansInput').value = '';
+      $('ansInput').disabled = true;
+      $('startBtn').disabled = !typeId;
+      $('startBtn').textContent = 'Start';
+      $('startBtn').classList.add('start');
+      $('startBtn').classList.remove('end');
+      $('submitBtn').disabled = true;
+      $('submitBtn').textContent = 'Submit';
+      $('nextBtn').disabled = true;
+      $('endRoundBtn').disabled = true;
+      setQuestionText(typeId ? getFullTypeName(typeId) : 'Ready?');
+      $('progressBar').style.width = '0%';
+      $('sessionState').textContent = 'Idle';
+      hideFeedback();
+      updatePanel();
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        remain -= 1;
+        if (remain <= 0) {
+          remain = 0;
+          finishSession(false);
+        }
+        updatePanel();
+      }, 1000);
+    }
+
+    function nextQuestion(keepFeedback = false) {
+      if (locked || !typeId) return;
+      if (mode === 'ten' && submitted >= 10) {
+        finishSession(false);
+        return;
+      }
+
+      answered = false;
+      clearAnswerOnInput = false;
+      const q = makeQuestion(typeId);
+      currentQuestion = q.text;
+      correctAns = q.answer;
+      currentNums = q.nums || null;
+      setQuestionText(currentQuestion);
+      $('ansInput').value = '';
+      $('ansInput').disabled = false;
+      $('ansInput').placeholder = 'Type answer, press Enter';
+      $('submitBtn').disabled = false;
+      $('submitBtn').textContent = 'Submit';
+      $('nextBtn').textContent = 'Next';
+      $('ansInput').focus();
+      if (!keepFeedback) hideFeedback();
+      updatePanel();
+    }
+
+    function makeQuestion(id) {
+      if (id === 1) {
+        const a = rnd(20, 80);
+        const b = rnd(15, 100 - a);
+        return { text: `${a} + ${b} = ?`, answer: a + b };
+      }
+      if (id === 2) {
+        const a = rnd(12, 20);
+        const b = rnd(3, a - 2);
+        return { text: `${a} - ${b} = ?`, answer: a - b };
+      }
+      if (id === 15) {
+        const a = rnd(2, 20);
+        const b = rnd(2, 20);
+        return { text: `${a} x ${b} = ?`, answer: a * b };
+      }
+      if (id === 3) {
+        const nums = Array.from({ length: 5 }, () => {
+          const len = rnd(3, 5);
+          return len === 3 ? rnd(100, 999) : len === 4 ? rnd(1000, 9999) : rnd(10000, 99999);
+        });
+        return { text: `${nums.join(' + ')} = ?`, answer: nums.reduce((sum, num) => sum + num, 0) };
+      }
+      if (id === 4) return twoAdd(rnd(200, 899), rnd(200, 899));
+      if (id === 5) return twoAdd(rnd(2000, 8999), rnd(2000, 8999));
+      if (id === 6) return twoAdd(rnd(20000, 89999), rnd(20000, 89999));
+      if (id === 7) {
+        const getNum = () => {
+          const len = rnd(1, 3);
+          return len === 1 ? rnd(100, 999) : len === 2 ? rnd(1000, 9999) : rnd(10000, 99999);
+        };
+        return twoAdd(getNum(), getNum());
+      }
+      if (id === 8) return complementSub(3);
+      if (id === 12) return complementSub(4);
+      if (id === 13) return complementSub(5);
+      if (id === 11) {
+        const count = rnd(3, 4);
+        const nums = [];
+        const start = rnd(5800, 19800);
+        let rest = start;
+        for (let i = 0; i < count; i += 1) {
+          const remaining = count - i - 1;
+          const reserve = 600 + remaining * 220;
+          const place = rnd(1, 2) === 1 ? 100 : 1000;
+          const maxRound = Math.max(2, Math.floor((rest - reserve) / place));
+          const round = rnd(2, Math.max(2, Math.min(maxRound, place === 100 ? 9 : 6))) * place;
+          const value = Math.max(87, Math.min(rest - reserve, round - rnd(2, 18)));
+          nums.push(value);
+          rest -= value;
+        }
+        return { text: `${start} - ${nums.join(' - ')} = ?`, answer: nums.reduce((value, num) => value - num, start) };
+      }
+      if (id === 14) {
+        const count = rnd(3, 4);
+        let answer = rnd(3000, 18000);
+        const parts = [answer];
+        for (let i = 1; i < count; i += 1) {
+          const len = rnd(3, 5);
+          const n = len === 3 ? rnd(120, 980) : len === 4 ? rnd(1200, 9800) : rnd(12000, 48000);
+          const sign = i === 1 || answer - n < 200 ? 1 : rnd(0, 1) === 1 ? 1 : -1;
+          parts.push(sign * n);
+          answer += sign * n;
+        }
+        const text = parts.map((num, index) => {
+          if (index === 0) return String(num);
+          return num > 0 ? `+ ${num}` : `- ${Math.abs(num)}`;
+        }).join(' ');
+        return { text: `${text} = ?`, answer };
+      }
+      if (id === 9) return mirrorMultiply(2);
+      if (id === 16) return mirrorMultiply(3);
+      if (id === 17) return mirrorMultiply(4);
+      if (id === 18) return mirrorMultiply(rnd(2, 4));
+
+      // Speed multiplication
+      if (id === 26) {
+        if (rnd(0, 1) === 0) {
+          const a = rnd(12, 99);
+          return { text: `${a} × 11 = ?`, answer: a * 11 };
+        } else {
+          const a = rnd(102, 499);
+          return { text: `${a} × 11 = ?`, answer: a * 11 };
+        }
+      }
+      if (id === 27) {
+        const n = rnd(1, 19);
+        const num = n * 5;
+        return { text: `${num}² = ?`, answer: num * num };
+      }
+      if (id === 28) {
+        const a = rnd(88, 99);
+        const b = rnd(88, 99);
+        return { text: `${a} × ${b} = ?`, answer: a * b };
+      }
+      if (id >= 29 && id <= 40) return magicSquareQuestion(id);
+      if (id >= 41 && id <= 50) return specialMultiplyQuestion(id);
+      if (id >= 51 && id <= 58) return arbitraryMultiplyQuestion(id);
+
+      // Decimal division: integer divided by integer, rounded to two decimals
+      if (id === 20) {
+        const divisor = rnd(3, 25);
+        let dividend;
+        do {
+          dividend = rnd(divisor * 2, divisor * 50);
+        } while (dividend % divisor === 0);
+        const answer = Math.round((dividend / divisor) * 100) / 100;
+        return { text: `${dividend} / ${divisor} = ? (round to two decimals)`, answer };
+      }
+
+      // Reverse mental math (24 game)
+      if (id >= 21 && id <= 25) {
+        return make24Question(id);
+      }
+
+      const b = rnd(3, 9);
+      const s = rnd(35, 150);
+      return { text: `${s * b} / ${b} = ?`, answer: s };
+    }
+
+    function squareQuestion(min, max) {
+      const a = rnd(min, max);
+      return { text: `${a}² = ?`, answer: a * a };
+    }
+
+    function magicSquareQuestion(id) {
+      const ranges = {
+        29: [51, 59],
+        30: [41, 49],
+        31: [101, 109],
+        32: [91, 99],
+        33: [11, 24],
+        34: [61, 74],
+        35: [26, 39],
+        36: [111, 124],
+        37: [76, 89],
+        38: [126, 199],
+        39: [210, 499]
+      };
+      if (id === 40) {
+        const pools = [[21, 24], [26, 74], [76, 124], [126, 199], [210, 499]];
+        const [min, max] = pools[rnd(0, pools.length - 1)];
+        return squareQuestion(min, max);
+      }
+      const [min, max] = ranges[id];
+      return squareQuestion(min, max);
+    }
+
+    function multiplyQuestion(a, b) {
+      return { text: `${a} × ${b} = ?`, answer: a * b };
+    }
+
+    function specialMultiplyQuestion(id) {
+      if (id === 41) {
+        const tens = rnd(1, 9);
+        const unit = rnd(1, 9);
+        return multiplyQuestion(tens * 10 + unit, tens * 10 + (10 - unit));
+      }
+      if (id === 42) {
+        const tens = rnd(1, 8);
+        const unit = rnd(1, 9);
+        return multiplyQuestion(tens * 10 + unit, (tens + 1) * 10 + (10 - unit));
+      }
+      if (id === 43) {
+        const tens = rnd(1, 9);
+        const unit = rnd(1, 9);
+        return multiplyQuestion(tens * 10 + unit, (10 - tens) * 10 + unit);
+      }
+      if (id === 44) return multiplyQuestion(rnd(11, 19), rnd(11, 19));
+      if (id === 45) return multiplyQuestion(rnd(101, 109), rnd(101, 109));
+      if (id === 46) return multiplyQuestion(rnd(91, 99), rnd(91, 99));
+      if (id === 47) return multiplyQuestion(rnd(91, 109), rnd(91, 109));
+      if (id === 48) return multiplyQuestion(rnd(51, 59), rnd(51, 59));
+      if (id === 49) return multiplyQuestion(rnd(41, 49), rnd(41, 49));
+      return multiplyQuestion(rnd(41, 59), rnd(41, 59));
+    }
+
+    function arbitraryMultiplyQuestion(id) {
+      if (id === 51) return multiplyQuestion(rnd(1, 99), rnd(1, 99));
+      if (id >= 52 && id <= 56) {
+        const ranges = {
+          52: [2, 23],
+          53: [27, 48],
+          54: [52, 70],
+          55: [77, 98],
+          56: [102, 123]
+        };
+        const [min, max] = ranges[id];
+        const a = rnd(min, max);
+        const b = rnd(2, Math.max(2, 249 - a));
+        return multiplyQuestion(a, b);
+      }
+      if (id === 57) {
+        let a;
+        let b;
+        do {
+          a = rnd(11, 99);
+          b = rnd(Math.max(11, a - 19), Math.min(99, a + 19));
+        } while (a === b || Math.abs(b - a) >= 20 || (a % 10) % 2 !== (b % 10) % 2);
+        return multiplyQuestion(a, b);
+      }
+      const unit = rnd(0, 9);
+      const tensPool = rnd(0, 1) === 0 ? [1, 3, 5, 7, 9] : [2, 4, 6, 8];
+      const tensA = tensPool[rnd(0, tensPool.length - 1)];
+      let tensB;
+      do {
+        tensB = tensPool[rnd(0, tensPool.length - 1)];
+      } while (tensB === tensA);
+      return multiplyQuestion(tensA * 10 + unit, tensB * 10 + unit);
+    }
+
+    function twoAdd(a, b) {
+      return { text: `${a} + ${b} = ?`, answer: a + b };
+    }
+
+    function complementSub(digits) {
+      const min = 10 ** (digits - 1);
+      const max = 10 ** digits - 1;
+      const a = rnd(Math.floor(max * 0.55), max);
+      const place = digits === 3 ? 100 : digits === 4 ? 1000 : 10000;
+      const round = rnd(2, Math.floor((a - min / 2) / place)) * place;
+      const b = Math.max(min, Math.min(a - 20, round - rnd(2, 28)));
+      return { text: `${a} - ${b} = ?`, answer: a - b };
+    }
+
+    function mirrorMultiply(digits) {
+      const prefixMin = 10 ** (digits - 2);
+      const prefixMax = 10 ** (digits - 1) - 1;
+      const prefix = rnd(prefixMin, prefixMax);
+      const tail = rnd(1, 9);
+      const a = prefix * 10 + tail;
+      const b = prefix * 10 + (10 - tail);
+      return { text: `${a} x ${b} = ?`, answer: a * b };
+    }
+
+    // ========== 24-game solver ==========
+    const EPS = 1e-9;
+
+    function solve24(nums) {
+      const solutions = new Set();
+      const ops = ['+', '-', '*', '/'];
+      const permutations = getPermutations(nums);
+
+      for (const perm of permutations) {
+        const [a, b, c, d] = perm;
+        for (const op1 of ops) {
+          for (const op2 of ops) {
+            for (const op3 of ops) {
+              // Five parenthesis structures
+              const structures = [
+                // ((a op1 b) op2 c) op3 d
+                () => { const r = calc(calc(calcVal(a), op1, calcVal(b)), op2, calcVal(c)); return { val: calc(r, op3, calcVal(d)), expr: `((${a}${op1}${b})${op2}${c})${op3}${d}` }; },
+                // (a op1 (b op2 c)) op3 d
+                () => { const r = calc(calcVal(a), op1, calc(calcVal(b), op2, calcVal(c))); return { val: calc(r, op3, calcVal(d)), expr: `(${a}${op1}(${b}${op2}${c}))${op3}${d}` }; },
+                // (a op1 b) op2 (c op3 d)
+                () => { const r = calc(calc(calcVal(a), op1, calcVal(b)), op2, calc(calcVal(c), op3, calcVal(d))); return { val: r, expr: `(${a}${op1}${b})${op2}(${c}${op3}${d})` }; },
+                // a op1 ((b op2 c) op3 d)
+                () => { const r = calc(calcVal(a), op1, calc(calc(calcVal(b), op2, calcVal(c)), op3, calcVal(d))); return { val: r, expr: `${a}${op1}((${b}${op2}${c})${op3}${d})` }; },
+                // a op1 (b op2 (c op3 d))
+                () => { const r = calc(calcVal(a), op1, calc(calcVal(b), op2, calc(calcVal(c), op3, calcVal(d)))); return { val: r, expr: `${a}${op1}(${b}${op2}(${c}${op3}${d}))` }; }
+              ];
+              for (const fn of structures) {
+                try {
+                  const result = fn();
+                  if (result.val !== null && Math.abs(result.val - 24) < EPS) {
+                    solutions.add(result.expr);
+                  }
+                } catch (e) { /* skip invalid */ }
+              }
+            }
+          }
+        }
+      }
+      return [...solutions];
+    }
+
+    function calcVal(n) { return n; }
+
+    function calc(a, op, b) {
+      if (a === null || b === null) return null;
+      switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': return Math.abs(b) < EPS ? null : a / b;
+      }
+      return null;
+    }
+
+    function getPermutations(arr) {
+      if (arr.length <= 1) return [arr];
+      const result = [];
+      for (let i = 0; i < arr.length; i++) {
+        const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+        for (const perm of getPermutations(rest)) {
+          result.push([arr[i], ...perm]);
+        }
+      }
+      // Deduplicate
+      const seen = new Set();
+      return result.filter(p => {
+        const key = p.join(',');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    // Verify expression equals 24 and uses the correct numbers
+    function verify24Expression(exprStr, targetNums) {
+      // Normalize symbols
+      let normalized = exprStr.replace(/×/g, '*').replace(/÷/g, '/').replace(/x/g, '*').replace(/X/g, '*');
+      // Extract all numbers
+      const usedNums = normalized.match(/\d+/g);
+      if (!usedNums || usedNums.length !== 4) return { ok: false, msg: 'Use exactly 4 numbers' };
+      const sortedUsed = usedNums.map(Number).sort((a, b) => a - b);
+      const sortedTarget = [...targetNums].sort((a, b) => a - b);
+      if (sortedUsed.join(',') !== sortedTarget.join(',')) return { ok: false, msg: 'Use each given number exactly once' };
+      // Safe evaluation
+      try {
+        // Allow only numbers, +-*/(), and spaces
+        if (!/^[\d+\-*/().  ]+$/.test(normalized)) return { ok: false, msg: 'Use only numbers and +-*/() operators' };
+        const result = Function('"use strict"; return (' + normalized + ')')();
+        if (typeof result !== 'number' || !isFinite(result)) return { ok: false, msg: 'Invalid expression' };
+        if (Math.abs(result - 24) < EPS) return { ok: true, msg: 'Correct!' };
+        return { ok: false, msg: `Result is ${Math.round(result * 100) / 100}, not 24` };
+      } catch (e) {
+        return { ok: false, msg: 'Expression format error. Check parentheses and operators.' };
+      }
+    }
+
+    // 24-game puzzle bank
+    const PUZZLES_24 = {
+      // Contains 1 and 2
+      21: [
+        [1, 2, 3, 4], [1, 2, 3, 5], [1, 2, 3, 6], [1, 2, 3, 7], [1, 2, 3, 8], [1, 2, 3, 9],
+        [1, 2, 4, 5], [1, 2, 4, 6], [1, 2, 4, 7], [1, 2, 4, 8], [1, 2, 4, 9],
+        [1, 2, 5, 6], [1, 2, 5, 7], [1, 2, 5, 8], [1, 2, 5, 9],
+        [1, 2, 6, 7], [1, 2, 6, 8], [1, 2, 6, 9],
+        [1, 2, 7, 8], [1, 2, 7, 9],
+        [1, 2, 8, 9],
+        [1, 2, 3, 12], [1, 2, 4, 12], [1, 2, 5, 10], [1, 2, 6, 12],
+        [1, 2, 3, 15], [1, 2, 5, 15], [1, 2, 8, 13]
+      ],
+      // Contains consecutive numbers
+      22: [
+        [1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7], [5, 6, 7, 8],
+        [1, 2, 3, 8], [1, 3, 4, 5], [2, 3, 4, 8], [3, 4, 5, 8], [1, 4, 5, 6],
+        [2, 4, 5, 6], [3, 5, 6, 7], [1, 2, 7, 8], [2, 3, 7, 8], [4, 5, 6, 8],
+        [1, 3, 5, 7], [2, 4, 6, 8], [3, 4, 7, 8], [1, 5, 6, 7], [5, 6, 7, 9],
+        [1, 2, 3, 6], [2, 3, 5, 6], [3, 4, 5, 9], [1, 6, 7, 8], [6, 7, 8, 9]
+      ],
+      // Contains repeated numbers
+      23: [
+        [1, 1, 2, 8], [1, 1, 3, 8], [1, 1, 4, 6], [1, 1, 5, 5],
+        [1, 2, 2, 6], [1, 2, 2, 9], [1, 3, 3, 8], [1, 4, 4, 6],
+        [2, 2, 2, 3], [2, 2, 2, 6], [2, 2, 3, 4], [2, 2, 3, 8],
+        [2, 2, 4, 5], [2, 2, 6, 8], [2, 3, 3, 4], [2, 3, 6, 6],
+        [3, 3, 3, 8], [3, 3, 4, 4], [3, 3, 6, 8], [3, 4, 4, 6],
+        [4, 4, 4, 6], [4, 4, 5, 5], [5, 5, 5, 4], [5, 5, 5, 1],
+        [6, 6, 6, 4], [6, 6, 8, 8], [7, 7, 7, 3], [8, 8, 3, 3],
+        [8, 8, 8, 3], [9, 9, 9, 8]
+      ],
+      // All four numbers are distinct
+      24: [
+        [1, 3, 4, 6], [1, 3, 5, 8], [1, 4, 5, 6], [1, 5, 5, 5],
+        [1, 5, 6, 7], [1, 6, 7, 8], [1, 7, 8, 9], [2, 3, 4, 6],
+        [2, 3, 5, 7], [2, 3, 6, 8], [2, 4, 5, 9], [2, 4, 6, 7],
+        [2, 5, 6, 8], [2, 5, 7, 9], [2, 6, 7, 9], [3, 4, 5, 8],
+        [3, 4, 6, 9], [3, 5, 6, 7], [3, 5, 7, 8], [3, 6, 7, 8],
+        [4, 5, 6, 7], [4, 5, 7, 9], [4, 6, 7, 9], [5, 6, 7, 8]
+      ],
+      // Unique solution only
+      25: [
+        [1, 5, 5, 5], [1, 2, 7, 7], [1, 4, 5, 6], [2, 3, 4, 8],
+        [1, 3, 4, 8], [2, 7, 7, 7], [3, 3, 7, 7], [1, 6, 6, 8],
+        [2, 2, 6, 9], [1, 8, 8, 8]
+      ]
+    };
+
+    // Precompute and keep truly solvable puzzles
+    const VALIDATED_PUZZLES = {};
+    function validatePuzzles() {
+      for (const [typeId, puzzles] of Object.entries(PUZZLES_24)) {
+        VALIDATED_PUZZLES[typeId] = puzzles.filter(nums => {
+          const solutions = solve24(nums);
+          return solutions.length > 0;
+        });
+        // Unique-solution puzzles keep exactly one solution
+        if (typeId === '25') {
+          VALIDATED_PUZZLES[typeId] = VALIDATED_PUZZLES[typeId].filter(nums => {
+            const solutions = solve24(nums);
+            return solutions.length === 1;
+          });
+        }
+      }
+    }
+    validatePuzzles();
+
+    function make24Question(id) {
+      const pool = VALIDATED_PUZZLES[id];
+      if (!pool || pool.length === 0) {
+        // Fallback: random four numbers
+        const nums = [rnd(1, 9), rnd(1, 9), rnd(1, 9), rnd(1, 9)];
+        return { text: `(${nums.join(', ')}) = 24. Enter an expression`, answer: 24, nums };
+      }
+      const nums = pool[rnd(0, pool.length - 1)];
+      // Shuffle order
+      const shuffled = [...nums].sort(() => Math.random() - 0.5);
+      return { text: `(${shuffled.join(', ')}) = 24. Enter an expression`, answer: 24, nums: shuffled };
+    }
+
+    function checkAnswer() {
+      if (locked || !typeId) {
+        showInfo('Choose a type to start.');
+        return;
+      }
+      if (answered) {
+        nextQuestion();
+        return;
+      }
+
+      const raw = $('ansInput').value.trim();
+      if (raw === '') {
+        showBad(typeId >= 21 && typeId <= 25 ? 'Enter an expression.' : 'Enter a numeric answer.');
+        return;
+      }
+
+      // 24-game answers are expressions, not plain numbers
+      const value = Number(raw);
+      if (typeId < 21 || typeId > 25) {
+        if (Number.isNaN(value)) {
+          showBad('Enter a numeric answer.');
+          return;
+        }
+      }
+
+      answered = true;
+      submitted += 1;
+
+      // 24-game: verify expression
+      let isCorrect = false;
+      let errorMsg = '';
+      if (typeId >= 21 && typeId <= 25 && currentNums) {
+        const result = verify24Expression(raw, currentNums);
+        isCorrect = result.ok;
+        errorMsg = result.msg;
+      } else if (typeId === 20) {
+        // Decimal division: compare rounded float values
+        isCorrect = Math.abs(value - correctAns) < 0.005;
+        if (!isCorrect) errorMsg = `Incorrect. Correct answer: ${correctAns.toFixed(2)}`;
+      } else {
+        isCorrect = value === correctAns;
+        if (!isCorrect) errorMsg = `Incorrect. Correct answer: ${correctAns}`;
+      }
+
+      saveToday(1, isCorrect ? 1 : 0);
+
+      if (isCorrect) {
+        right += 1;
+        streak += 1;
+        bestStreak = Math.max(bestStreak, streak);
+        localStorage.setItem('mental_best_streak', String(bestStreak));
+        showOk(typeId >= 21 && typeId <= 25 ? 'Correct!' : 'Correct');
+        updatePanel();
+        setTimeout(() => {
+          if (!locked) nextQuestion(true);
+        }, 420);
+      } else {
+        wrong += 1;
+        streak = 0;
+        clearAnswerOnInput = true;
+        $('ansInput').value = '';
+        $('ansInput').focus();
+        $('submitBtn').textContent = 'Next';
+        $('nextBtn').textContent = mode === 'ten' && submitted >= 10 ? 'View Score' : 'Next';
+        showBad(errorMsg);
+        updatePanel();
+        if (mode === 'ten' && submitted >= 10) {
+          $('nextBtn').textContent = 'View Score';
+        }
+      }
+    }
+
+    function finishSession(byUser) {
+      if (locked && !byUser) return;
+      locked = true;
+      if (timer) clearInterval(timer);
+      timer = null;
+      $('ansInput').disabled = true;
+      $('startBtn').disabled = !typeId;
+      $('startBtn').textContent = 'Start';
+      $('startBtn').classList.add('start');
+      $('startBtn').classList.remove('end');
+      $('submitBtn').disabled = true;
+      $('submitBtn').textContent = 'Submit';
+      $('nextBtn').disabled = true;
+      $('endRoundBtn').disabled = true;
+      $('sessionState').textContent = 'Finished';
+
+      const cost = elapsedSeconds();
+      const record = {
+        time: new Date().toLocaleString('en-US', { hour12: false }),
+        mode: MODE_NAMES[mode],
+        type: getTypeName(typeId),
+        total: submitted,
+        right,
+        acc: accuracy(),
+        cost
+      };
+
+      if (submitted > 0) saveRecord(record);
+      showInfo(`Round complete: ${submitted} submitted, ${right} correct, ${accuracy()}% accuracy, ${formatTime(cost)}.`);
+      updatePanel();
+      renderHistory();
+    }
+
+    function updatePanel() {
+      $('doneNum').textContent = submitted;
+      $('rightNum').textContent = right;
+      $('accNum').textContent = `${accuracy()}%`;
+      $('timeNum').textContent = mode === 'timed' && !locked ? `${remain}s` : formatTime(elapsedSeconds());
+      $('streak').textContent = streak;
+      $('bestStreak').textContent = bestStreak;
+      $('modeLine').textContent = buildModeLine();
+      $('progressBar').style.width = `${progress()}%`;
+      renderToday();
+    }
+
+    function showSelectedType() {
+      const type = getType(typeId);
+      if (!type) return;
+      setQuestionText(getFullTypeName(typeId));
+      $('sessionState').textContent = 'Selected';
+      $('startBtn').disabled = false;
+      renderTrainingNote();
+      hideFeedback();
+      updatePanel();
+    }
+
+    function renderTrainingNote() {
+      const type = getType(typeId);
+      if (!type) return;
+      $('trainingNote').classList.remove('expanded');
+      $('noteToggle').setAttribute('aria-expanded', 'false');
+      $('noteTitle').textContent = `${type.group} · ${type.name}`;
+      $('noteText').textContent = type.meta;
+      $('noteSteps').textContent = type.steps;
+      $('noteCautions').textContent = NOTE_DETAILS[type.id]?.caution || type.cautions;
+      $('noteExample').textContent = NOTE_DETAILS[type.id]?.example || type.example;
+      $('noteRequirement').textContent = type.requirement;
+      $('noteTags').innerHTML = type.tags.map(tag => `<span>${tag}</span>`).join('');
+    }
+
+    function buildModeLine() {
+      const typeName = typeId ? getFullTypeName(typeId) : 'Choose a type';
+      let modeText = MODE_NAMES[mode];
+      if (mode === 'ten') modeText = `${modeText} · ${Math.min(submitted + (answered ? 0 : 1), 10)}/10`;
+      if (mode === 'timed') modeText = `${modeText} · ${remain}s left`;
+      return `Current: ${modeText} · ${typeName}`;
+    }
+
+    function progress() {
+      if (!typeId) return 0;
+      if (mode === 'ten') return Math.min(100, submitted * 10);
+      if (mode === 'timed') return Math.max(0, Math.min(100, (120 - remain) / 120 * 100));
+      return Math.min(100, submitted % 20 * 5);
+    }
+
+    function accuracy() {
+      return submitted ? Math.round(right / submitted * 100) : 0;
+    }
+
+    function elapsedSeconds() {
+      return startedAt ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
+    }
+
+    function formatTime(sec) {
+      if (sec < 60) return `${sec}s`;
+      return `${Math.floor(sec / 60)}m ${sec % 60}s`;
+    }
+
+    function getTypeName(id) {
+      return getType(id)?.name || 'Not selected';
+    }
+
+    function getFullTypeName(id) {
+      const type = getType(id);
+      return type ? type.meta : 'Not selected';
+    }
+
+    function setQuestionText(text) {
+      const el = $('qArea');
+      el.textContent = text;
+      el.classList.toggle('long', text.length > 20);
+      el.classList.toggle('xlong', text.length > 38);
+    }
+
+    function getType(id) {
+      return TYPES.find(type => type.id === id);
+    }
+
+    function showInfo(text) {
+      const area = $('resArea');
+      if (!area) return;
+      area.className = 'feedback';
+      area.textContent = text;
+    }
+
+    function showOk(text) {
+      const area = $('resArea');
+      if (!area) return;
+      area.className = 'feedback ok';
+      area.textContent = text;
+    }
+
+    function showBad(text) {
+      const area = $('resArea');
+      if (!area) return;
+      area.className = 'feedback bad';
+      area.textContent = text;
+    }
+
+    function hideFeedback() {
+      const area = $('resArea');
+      if (!area) return;
+      area.className = 'feedback hide';
+      area.textContent = '';
+    }
+
+    function localDateKey() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `mental_today_${y}-${m}-${day}`;
+    }
+
+    function saveToday(total, rightCount) {
+      const data = JSON.parse(localStorage.getItem(localDateKey()) || '{"total":0,"right":0}');
+      data.total += total;
+      data.right += rightCount;
+      localStorage.setItem(localDateKey(), JSON.stringify(data));
+    }
+
+    function renderToday() {
+      const data = JSON.parse(localStorage.getItem(localDateKey()) || '{"total":0,"right":0}');
+      $('todayTotal').textContent = data.total;
+      $('todayAcc').textContent = data.total ? `${Math.round(data.right / data.total * 100)}%` : '0%';
+    }
+
+    function saveRecord(record) {
+      const list = JSON.parse(localStorage.getItem('mental_records') || '[]');
+      list.unshift(record);
+      localStorage.setItem('mental_records', JSON.stringify(list.slice(0, 10)));
+    }
+
+    // ========== Knowledge base ==========
+    function toggleKB() {
+      const overlay = $('kbOverlay');
+      overlay.classList.toggle('open');
+      if (overlay.classList.contains('open') && !$('mulTableBody').children.length) buildMulTable();
+    }
+    function switchKBTab(tab, el) {
+      document.querySelectorAll('.kb-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.kb-section').forEach(s => s.style.display = 'none');
+      el.classList.add('active');
+      $('kb-' + tab).style.display = '';
+      if (tab === 'table' && !$('mulTableBody').children.length) buildMulTable();
+    }
+    function buildMulTable() {
+      const body = $('mulTableBody');
+      let html = '';
+      for (let i = 1; i <= 20; i++) {
+        html += '<tr><td>' + i + '</td>';
+        for (let j = 1; j <= 20; j++) html += '<td>' + (i * j) + '</td>';
+        html += '</tr>';
+      }
+      body.innerHTML = html;
+    }
+
+    function renderHistory() {
+      const list = JSON.parse(localStorage.getItem('mental_records') || '[]');
+      if (!list.length) {
+        $('historyList').innerHTML = '<div class="empty">No records yet</div>';
+        return;
+      }
+      $('historyList').innerHTML = list.map(item => `
+        <div class="record-item">
+          <div>
+            <strong>${item.mode} · ${item.type}</strong>
+            <span>${item.time}</span>
+          </div>
+          <div class="record-score">Correct ${item.right}/${item.total} · ${item.acc}% · ${formatTime(item.cost)}</div>
+        </div>
+      `).join('');
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('mental_records');
+      localStorage.removeItem('mental_best_streak');
+      for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('mental_today_')) localStorage.removeItem(key);
+      }
+      streak = 0;
+      bestStreak = 0;
+      renderToday();
+      renderHistory();
+      updatePanel();
+    }
+
+    function initTheme() {
+      document.body.dataset.theme = localStorage.getItem('mental_theme') || 'dark';
+      updateThemeButton();
+    }
+
+    initTheme();
+    renderTypeButtons();
+    bindEvents();
+    updateSidebarButton();
+    renderToday();
+    renderHistory();
+    resetSession();
+    setInterval(() => {
+      if (startedAt && !locked) updatePanel();
+    }, 1000);
+  </script>
+</body>
+</html>
