@@ -4,6 +4,8 @@ A bilingual mental math practice page for daily arithmetic drills. It includes C
 
 Live site: https://x-wang9.github.io/mental-math-trainer/
 
+Category: Brain Health
+
 ## Features
 
 - Chinese / English switcher on one page
